@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
@@ -8,7 +10,9 @@ namespace QuickBrowse;
 internal sealed class MainForm : Form
 {
     private const string HomeUrl = "quickbrowse://home";
+    private const string ReleasesApiUrl = "https://api.github.com/repos/Dynamic444/dynamik_browser/releases/latest";
     private const int MaxHistoryItems = 500;
+    private static readonly HttpClient UpdateHttpClient = CreateUpdateHttpClient();
     private static readonly Color ChromeColor = Color.FromArgb(24, 24, 34);
     private static readonly Color AccentColor = Color.FromArgb(184, 129, 255);
     private static readonly Color MutedColor = Color.FromArgb(185, 181, 204);
@@ -210,6 +214,7 @@ internal sealed class MainForm : Form
         _downloadsButton.DropDownOpening += (_, _) => PopulateDownloadsMenu();
         KeyDown += FormKeyDown;
         FormClosing += (_, _) => SaveData();
+        Shown += async (_, _) => await CheckForUpdatesAsync(showUpToDateMessage: false);
 
         CreateTab(HomeUrl);
     }
@@ -303,6 +308,8 @@ internal sealed class MainForm : Form
         navigation.Controls.Add(CreateSidebarButton("☆", "Закладки", (_, _) => _bookmarksButton.ShowDropDown()));
         navigation.Controls.Add(CreateSidebarButton("◷", "История", (_, _) => _historyButton.ShowDropDown()));
         navigation.Controls.Add(CreateSidebarButton("↓", "Загрузки", (_, _) => _downloadsButton.ShowDropDown()));
+        navigation.Controls.Add(CreateSidebarButton("↑", "Проверить обновления", async (_, _) =>
+            await CheckForUpdatesAsync(showUpToDateMessage: true)));
 
         _sidebar.Controls.Add(navigation);
         _sidebar.Controls.Add(logo);
@@ -845,6 +852,174 @@ internal sealed class MainForm : Form
             browser.CoreWebView2.NavigateToString(StartPageHtml);
         }
     }
+
+    private static HttpClient CreateUpdateHttpClient()
+    {
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        client.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("QuickBrowse", GetCurrentVersion().ToString(3)));
+        client.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        return client;
+    }
+
+    private async Task CheckForUpdatesAsync(bool showUpToDateMessage)
+    {
+        _status.Text = "Проверка обновлений…";
+        try
+        {
+            using var response = await UpdateHttpClient.GetAsync(ReleasesApiUrl);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _status.Text = "Обновлений пока нет";
+                if (showUpToDateMessage)
+                    MessageBox.Show(this, "Пока не опубликовано ни одной версии QuickBrowse.",
+                        "Обновления", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            response.EnsureSuccessStatusCode();
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            using var release = await JsonDocument.ParseAsync(stream);
+            var root = release.RootElement;
+            if (!root.TryGetProperty("tag_name", out var tagElement) ||
+                tagElement.ValueKind != JsonValueKind.String)
+                throw new InvalidDataException("В релизе GitHub отсутствует номер версии.");
+            var tag = tagElement.GetString();
+            if (!TryParseReleaseVersion(tag, out var latestVersion))
+                throw new InvalidDataException($"Некорректный номер версии в релизе GitHub: {tag}");
+
+            if (latestVersion <= GetCurrentVersion())
+            {
+                _status.Text = "Установлена последняя версия";
+                if (showUpToDateMessage)
+                    MessageBox.Show(this, "У вас установлена последняя версия QuickBrowse.",
+                        "Обновления", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var installerUri = FindInstallerAsset(root, latestVersion);
+            var answer = MessageBox.Show(
+                this,
+                $"Доступна новая версия QuickBrowse {latestVersion}.\n\nСкачать и установить её сейчас?",
+                "Доступно обновление",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+            if (answer != DialogResult.Yes)
+            {
+                _status.Text = $"Доступна версия {latestVersion}";
+                return;
+            }
+
+            await DownloadAndLaunchInstallerAsync(installerUri, latestVersion);
+        }
+        catch (HttpRequestException ex)
+        {
+            _status.Text = "Не удалось проверить обновления";
+            if (showUpToDateMessage)
+                ShowError("Не удалось проверить обновления. Проверьте подключение к интернету.", ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            _status.Text = "Проверка обновлений: превышено время ожидания";
+            if (showUpToDateMessage)
+                ShowError("Сервер обновлений не ответил вовремя.", ex);
+        }
+        catch (JsonException ex)
+        {
+            _status.Text = "Некорректный ответ сервера обновлений";
+            ShowError("Не удалось прочитать сведения об обновлении.", ex);
+        }
+        catch (InvalidDataException ex)
+        {
+            _status.Text = "Некорректные сведения об обновлении";
+            ShowError("Сервер обновлений вернул неверные сведения.", ex);
+        }
+        catch (IOException ex)
+        {
+            _status.Text = "Не удалось скачать установщик обновления";
+            ShowError("Не удалось сохранить установщик обновления.", ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _status.Text = "Нет доступа для сохранения обновления";
+            ShowError("Нет доступа для сохранения установщика обновления.", ex);
+        }
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            _status.Text = "Не удалось запустить установщик обновления";
+            ShowError("Не удалось запустить установщик обновления.", ex);
+        }
+    }
+
+    private async Task DownloadAndLaunchInstallerAsync(Uri installerUri, Version version)
+    {
+        var installerPath = Path.Combine(
+            Path.GetTempPath(),
+            $"QuickBrowse-Setup-{version}.exe");
+        _status.Text = "Скачивание обновления…";
+        using (var response = await UpdateHttpClient.GetAsync(
+                   installerUri,
+                   HttpCompletionOption.ResponseHeadersRead))
+        {
+            response.EnsureSuccessStatusCode();
+            await using var source = await response.Content.ReadAsStreamAsync();
+            await using var destination = new FileStream(
+                installerPath,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None);
+            await source.CopyToAsync(destination);
+        }
+
+        _status.Text = "Запуск установщика обновления…";
+        Process.Start(new ProcessStartInfo(installerPath) { UseShellExecute = true });
+        Close();
+    }
+
+    private static Uri FindInstallerAsset(JsonElement release, Version version)
+    {
+        if (!release.TryGetProperty("assets", out var assets) ||
+            assets.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("В опубликованном релизе нет установщика.");
+
+        var expectedName = $"QuickBrowse-Setup-{version}.exe";
+        foreach (var asset in assets.EnumerateArray())
+        {
+            if (asset.ValueKind != JsonValueKind.Object ||
+                !asset.TryGetProperty("name", out var name) ||
+                name.ValueKind != JsonValueKind.String ||
+                name.GetString() != expectedName)
+                continue;
+
+            if (!asset.TryGetProperty("browser_download_url", out var downloadElement) ||
+                downloadElement.ValueKind != JsonValueKind.String)
+                throw new InvalidDataException("В релизе отсутствует ссылка на установщик.");
+            var downloadUrl = downloadElement.GetString();
+            if (Uri.TryCreate(downloadUrl, UriKind.Absolute, out var uri) &&
+                uri.Scheme == Uri.UriSchemeHttps &&
+                uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase) &&
+                uri.AbsolutePath.StartsWith(
+                    "/Dynamic444/dynamik_browser/releases/download/",
+                    StringComparison.OrdinalIgnoreCase))
+                return uri;
+
+            throw new InvalidDataException("Ссылка на установщик в релизе небезопасна или неверна.");
+        }
+
+        throw new InvalidDataException($"В релизе отсутствует файл {expectedName}.");
+    }
+
+    private static bool TryParseReleaseVersion(string? tag, out Version version)
+    {
+        var normalized = tag?.Trim();
+        if (normalized?.StartsWith('v') == true)
+            normalized = normalized[1..];
+        return Version.TryParse(normalized, out version!);
+    }
+
+    private static Version GetCurrentVersion() =>
+        typeof(MainForm).Assembly.GetName().Version ?? new Version(1, 0, 0);
 
     private sealed record Bookmark(string Title, string Url);
     private sealed record HistoryEntry(string Title, string Url, DateTimeOffset VisitedAt);

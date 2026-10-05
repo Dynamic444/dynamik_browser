@@ -1,5 +1,7 @@
 #define MyAppName "QuickBrowse"
-#define MyAppVersion "1.0.0"
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.1"
+#endif
 #define MyAppPublisher "QuickBrowse"
 #define MyAppExeName "QuickBrowse.exe"
 #define PublishDir "bin\Release\net8.0-windows\win-x64\publish"
@@ -21,7 +23,7 @@ RestartApplications=no
 Compression=lzma2
 SolidCompression=yes
 OutputDir=installer
-OutputBaseFilename=QuickBrowse-Setup-1.0.0
+OutputBaseFilename=QuickBrowse-Setup-{#MyAppVersion}
 SetupLogging=yes
 
 [Languages]

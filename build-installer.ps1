@@ -2,6 +2,11 @@ $ErrorActionPreference = "Stop"
 
 $projectDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $publishDirectory = Join-Path $projectDirectory "bin\Release\net8.0-windows\win-x64\publish"
+$projectFile = [xml](Get-Content (Join-Path $projectDirectory "QuickBrowse.csproj"))
+$version = $projectFile.Project.PropertyGroup.Version
+if (-not $version) {
+    throw "Не удалось прочитать версию приложения из QuickBrowse.csproj."
+}
 $setupCommand = Get-Command "ISCC.exe" -ErrorAction SilentlyContinue
 $setupCompilerPath = if ($setupCommand) { $setupCommand.Source } else { $null }
 
@@ -28,12 +33,13 @@ try {
         throw "Не найден QuickBrowse.exe в папке публикации: $publishDirectory"
     }
 
-    & $setupCompilerPath ".\QuickBrowse.iss"
+    & $setupCompilerPath "/DMyAppVersion=`"$version`"" ".\QuickBrowse.iss"
     if ($LASTEXITCODE -ne 0) {
         throw "Сборка установщика завершилась с кодом $LASTEXITCODE."
     }
 
-    Write-Host "Установщик создан: $(Join-Path $projectDirectory 'installer\QuickBrowse-Setup-1.0.0.exe')"
+    $installerPath = Join-Path $projectDirectory "installer\QuickBrowse-Setup-$version.exe"
+    Write-Host "Установщик создан: $installerPath"
 }
 finally {
     Pop-Location
