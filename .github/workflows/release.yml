@@ -51,4 +51,14 @@ jobs:
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$env:GITHUB_REF_NAME" ".\installer\QuickBrowse-Setup-$env:RELEASE_VERSION.exe" --title "QuickBrowse $env:RELEASE_VERSION" --generate-notes
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $installer = ".\installer\QuickBrowse-Setup.exe"
+          gh release upload $tag $installer --clobber
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $installer --title "QuickBrowse $env:RELEASE_VERSION" --generate-notes
+          }
+          if ($LASTEXITCODE -ne 0) {
+            throw "GitHub release publishing failed with exit code $LASTEXITCODE."
+          }
