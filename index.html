@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171522">
+  <meta name="description" content="ДИНАМИК браузер — простой браузер для Windows с вкладками, закладками и автообновлениями.">
+  <title>ДИНАМИК браузер — скачать для Windows</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #171522;
+      color: #f8f5ff;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --muted: #b9b2c9;
+      --purple: #c9a7ff;
+      --panel: #ffffff0d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 78% 12%, #66438a70, transparent 38rem),
+        radial-gradient(ellipse at 12% 86%, #31527a55, transparent 36rem),
+        #171522;
+    }
+
+    a { color: inherit; }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      width: min(1080px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 26px 28px 20px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .logo {
+      display: grid;
+      width: 45px;
+      height: 45px;
+      place-items: center;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #e1b7ff, #8763fa);
+      box-shadow: 0 7px 25px #a179ff45;
+      color: #20182c;
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .brand { font-size: 16px; font-weight: 700; }
+    .brand-sub { margin-top: 3px; color: var(--muted); font-size: 12px; }
+
+    main {
+      display: grid;
+      flex: 1;
+      grid-template-columns: 1.1fr .9fr;
+      align-items: center;
+      gap: clamp(32px, 7vw, 84px);
+      padding: 76px 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 15px;
+      color: var(--purple);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 620px;
+      margin: 0;
+      font-size: clamp(42px, 7vw, 70px);
+      letter-spacing: -.055em;
+      line-height: 1.04;
+    }
+
+    h1 span {
+      color: var(--purple);
+      background: linear-gradient(100deg, #e3bdff, #a79bff);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lead {
+      max-width: 490px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .download {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      display: inline-flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+      padding: 0 23px;
+      border: 0;
+      border-radius: 15px;
+      background: linear-gradient(120deg, #e0b3ff, #b4a0ff);
+      box-shadow: 0 9px 32px #a27aff38;
+      color: #20182c;
+      font-size: 15px;
+      font-weight: 750;
+      text-decoration: none;
+      transition: transform .16s, box-shadow .16s;
+    }
+
+    .download::after {
+      position: absolute;
+      z-index: -1;
+      inset: -60% auto -60% -70%;
+      width: 42%;
+      transform: skewX(-22deg);
+      background: linear-gradient(90deg, transparent, #ffffff18 25%, #ffffffd9 50%, #ffffff18 75%, transparent);
+      content: "";
+      pointer-events: none;
+    }
+
+    .download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px #a27aff55;
+    }
+
+    .download:hover::after {
+      animation: feature-shimmer .48s ease-out both;
+    }
+
+    .download > span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .download:focus-visible, a:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 4px;
+    }
+
+    .small-link { color: #d1c9df; font-size: 13px; }
+    .note { margin: 15px 0 0; color: #9992a9; font-size: 12px; line-height: 1.6; }
+
+    .preview {
+      position: relative;
+      padding: 12px;
+      border: 1px solid #ffffff20;
+      border-radius: 24px;
+      background: linear-gradient(145deg, #ffffff13, #ffffff05);
+      box-shadow: 0 28px 80px #07060d70;
+      transform: perspective(1000px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+      transform-style: preserve-3d;
+      transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+      will-change: transform;
+    }
+
+    .preview.is-tilting {
+      transition: transform 80ms ease-out, box-shadow 180ms ease-out;
+      box-shadow: 0 36px 95px #07060d90;
+    }
+
+    .browser {
+      overflow: hidden;
+      min-height: 300px;
+      border: 1px solid #ffffff16;
+      border-radius: 16px;
+      background:
+        radial-gradient(ellipse at 75% 12%, #66438a75, transparent 18rem),
+        linear-gradient(140deg, #1c1b2d, #27213c 60%, #1b1d2e);
+    }
+
+    .browser-bar {
+      display: flex;
+      height: 38px;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+      border-bottom: 1px solid #ffffff13;
+      background: #191825;
+    }
+
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: #817891; }
+
+    .address {
+      height: 17px;
+      flex: 1;
+      margin-left: 10px;
+      border: 1px solid #ffffff12;
+      border-radius: 6px;
+      background: #ffffff0d;
+    }
+
+    .browser-content {
+      display: flex;
+      min-height: 260px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 23px;
+      text-align: center;
+    }
+
+    .browser-mark {
+      display: grid;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(145deg, #d39cff, #8368ff);
+      color: #20182c;
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .browser-content strong { margin-top: 14px; font-size: 18px; }
+    .browser-content p { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+
+    .tiles {
+      display: flex;
+      gap: 9px;
+      margin-top: 24px;
+    }
+
+    .tile {
+      display: grid;
+      width: 43px;
+      height: 43px;
+      place-items: center;
+      border: 1px solid #ffffff12;
+      border-radius: 13px;
+      background: #ffffff0d;
+      color: #e7def5;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 13px;
+      margin-bottom: 28px;
+    }
+
+    .feature {
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      border: 1px solid #ffffff12;
+      border-radius: 17px;
+      background: var(--panel);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .feature::after {
+      position: absolute;
+      inset: -45% auto -45% -65%;
+      width: 42%;
+      transform: skewX(-22deg);
+      background: linear-gradient(90deg, transparent, #ffffff09 25%, #ffffffba 50%, #ffffff09 75%, transparent);
+      content: "";
+      pointer-events: none;
+    }
+
+    .feature:hover {
+      transform: translateY(-3px);
+      border-color: #d7bdff55;
+      background: #ffffff12;
+    }
+
+    .feature:hover::after {
+      animation: feature-shimmer .48s ease-out both;
+    }
+
+    @keyframes feature-shimmer {
+      from { left: -65%; }
+      to { left: 125%; }
+    }
+
+    .feature-icon { color: var(--purple); font-size: 18px; }
+    .feature strong { display: block; margin-top: 10px; font-size: 14px; }
+    .feature p { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    footer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 16px;
+      border-top: 1px solid #ffffff15;
+      color: #928ba1;
+      font-size: 12px;
+    }
+
+    footer a { color: #c4bbd4; text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 20px 20px 16px; }
+      main { grid-template-columns: 1fr; gap: 42px; padding: 68px 0 45px; }
+      .preview { width: min(500px, 100%); margin: 0 auto; }
+      .features { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo" aria-hidden="true">Д</div>
+      <div>
+        <div class="brand">ДИНАМИК браузер</div>
+        <div class="brand-sub">Твой интернет — в одном месте</div>
+      </div>
+    </header>
+
+    <main>
+      <section aria-labelledby="hero-title">
+        <p class="eyebrow">Браузер для Windows</p>
+        <h1 id="hero-title">Открой для себя <span>интернет</span></h1>
+        <p class="lead">Удобные вкладки, быстрый поиск и любимые сайты — в одном простом браузере.</p>
+        <div class="actions">
+          <a class="download" href="https://github.com/Dynamic444/dynamik_browser/releases/download/v1.0.3/QuickBrowse-Setup.exe" rel="noopener">
+            <span aria-hidden="true">↓</span><span>Скачать для Windows</span>
+          </a>
+          <a class="small-link" href="https://github.com/Dynamic444/dynamik_browser/releases" rel="noopener">Все версии</a>
+        </div>
+        <p class="note">Версия 1.0.3 · Windows 10/11 · x64.<br>
+          Установщик с официального GitHub-релиза.<br>
+          Для сайтов требуется Microsoft Edge WebView2 Runtime.</p>
+      </section>
+
+      <div class="preview" aria-hidden="true">
+        <div class="browser">
+          <div class="browser-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <div class="address"></div>
+          </div>
+          <div class="browser-content">
+            <div class="browser-mark">Д</div>
+            <strong>Куда отправимся?</strong>
+            <p>Найди нужное или открой любимый сайт</p>
+            <div class="tiles">
+              <span class="tile">G</span><span class="tile">▶</span><span class="tile">M</span><span class="tile">W</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section class="features" aria-label="Возможности">
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">▣</div>
+        <strong>Вкладки и быстрый поиск</strong>
+        <p>Открывай несколько страниц и ищи прямо из адресной строки.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">☆</div>
+        <strong>Закладки и история</strong>
+        <p>Сохраняй нужные сайты и возвращайся к недавно просмотренным.</p>
+      </article>
+      <article class="feature">
+        <div class="feature-icon" aria-hidden="true">↻</div>
+        <strong>Проверка обновлений</strong>
+        <p>Браузер проверяет новые версии и спрашивает перед установкой.</p>
+      </article>
+    </section>
+
+    <footer>
+      <span>© 2026 ДИНАМИК браузер</span>
+      <a href="https://github.com/Dynamic444/dynamik_browser" rel="noopener">Исходный код и выпуски на GitHub</a>
+    </footer>
+  </div>
+    <script>
+      const preview = document.querySelector(".preview");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      preview.addEventListener("pointermove", (event) => {
+        if (reducedMotion.matches || event.pointerType === "touch") return;
+        const bounds = preview.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+        const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+        preview.style.setProperty("--tilt-x", `${-y * 10}deg`);
+        preview.style.setProperty("--tilt-y", `${x * 10}deg`);
+        preview.classList.add("is-tilting");
+      });
+
+      preview.addEventListener("pointerleave", () => {
+        preview.style.setProperty("--tilt-x", "0deg");
+        preview.style.setProperty("--tilt-y", "0deg");
+        preview.classList.remove("is-tilting");
+      });
+    </script>
+</body>
+</html>
