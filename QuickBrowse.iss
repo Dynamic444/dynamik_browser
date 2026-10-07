@@ -1,8 +1,8 @@
-#define MyAppName "QuickBrowse"
+#define MyAppName "ДИНАМИК браузер"
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.1"
 #endif
-#define MyAppPublisher "QuickBrowse"
+#define MyAppPublisher "Dynamic444"
 #define MyAppExeName "QuickBrowse.exe"
 #define PublishDir "bin\Release\net8.0-windows\win-x64\publish"
 
@@ -12,7 +12,7 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\QuickBrowse
-DefaultGroupName=QuickBrowse
+DefaultGroupName=ДИНАМИК браузер
 UninstallDisplayIcon={app}\{#MyAppExeName}
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
@@ -23,7 +23,7 @@ RestartApplications=no
 Compression=lzma2
 SolidCompression=yes
 OutputDir=installer
-OutputBaseFilename=QuickBrowse-Setup-{#MyAppVersion}
+OutputBaseFilename=QuickBrowse-Setup
 SetupLogging=yes
 
 [Languages]
@@ -36,8 +36,8 @@ Name: "desktopicon"; Description: "Создать ярлык на рабочем
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\QuickBrowse"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\QuickBrowse"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\ДИНАМИК браузер"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\ДИНАМИК браузер"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Запустить QuickBrowse"; Flags: postinstall nowait skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Запустить ДИНАМИК браузер"; Flags: postinstall nowait skipifsilent

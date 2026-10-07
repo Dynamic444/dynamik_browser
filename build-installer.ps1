@@ -38,7 +38,7 @@ try {
         throw "Сборка установщика завершилась с кодом $LASTEXITCODE."
     }
 
-    $installerPath = Join-Path $projectDirectory "installer\QuickBrowse-Setup-$version.exe"
+    $installerPath = Join-Path $projectDirectory "installer\QuickBrowse-Setup.exe"
     Write-Host "Установщик создан: $installerPath"
 }
 finally {

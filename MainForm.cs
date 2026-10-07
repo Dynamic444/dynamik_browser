@@ -22,7 +22,7 @@ internal sealed class MainForm : Form
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
-          <title>Главная — QuickBrowse</title>
+          <title>Главная — ДИНАМИК браузер</title>
           <style>
             * { box-sizing: border-box; }
             body {
@@ -97,7 +97,7 @@ internal sealed class MainForm : Form
           <main>
             <div class="top">
               <div class="logo">Q</div>
-              <div><div class="brand">QuickBrowse</div><div class="tagline">Твой интернет — в одном месте</div></div>
+              <div><div class="brand">ДИНАМИК браузер</div><div class="tagline">Твой интернет — в одном месте</div></div>
             </div>
             <div class="hello" id="greeting">Добро пожаловать</div>
             <h1>Куда отправимся?</h1>
@@ -133,7 +133,7 @@ internal sealed class MainForm : Form
     private readonly Panel _sidebar = new();
     private readonly ToolTip _toolTip = new();
     private readonly ToolStrip _toolbar = new();
-    private readonly ToolStripLabel _brand = new("QuickBrowse");
+    private readonly ToolStripLabel _brand = new("ДИНАМИК браузер");
     private readonly ToolStripTextBox _address = new();
     private readonly ToolStripButton _backButton = new("←");
     private readonly ToolStripButton _forwardButton = new("→");
@@ -158,7 +158,7 @@ internal sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "QuickBrowse";
+        Text = "ДИНАМИК браузер";
         MinimumSize = new Size(900, 560);
         Size = new Size(1200, 800);
         StartPosition = FormStartPosition.CenterScreen;
@@ -472,7 +472,7 @@ internal sealed class MainForm : Form
         catch (Exception ex)
         {
             if (!page.IsDisposed)
-                ShowError("Не удалось запустить браузер. Установите Microsoft Edge WebView2 Runtime.", ex);
+                ShowError("Не удалось запустить ДИНАМИК браузер. Установите Microsoft Edge WebView2 Runtime.", ex);
         }
     }
 
@@ -840,7 +840,7 @@ internal sealed class MainForm : Form
 
     private void ShowError(string message, Exception exception)
     {
-        MessageBox.Show(this, $"{message}\n\n{exception.Message}", "QuickBrowse",
+        MessageBox.Show(this, $"{message}\n\n{exception.Message}", "ДИНАМИК браузер",
             MessageBoxButtons.OK, MessageBoxIcon.Error);
     }
 
@@ -873,7 +873,7 @@ internal sealed class MainForm : Form
             {
                 _status.Text = "Обновлений пока нет";
                 if (showUpToDateMessage)
-                    MessageBox.Show(this, "Пока не опубликовано ни одной версии QuickBrowse.",
+                    MessageBox.Show(this, "Пока не опубликовано ни одной версии ДИНАМИК браузера.",
                         "Обновления", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -893,7 +893,7 @@ internal sealed class MainForm : Form
             {
                 _status.Text = "Установлена последняя версия";
                 if (showUpToDateMessage)
-                    MessageBox.Show(this, "У вас установлена последняя версия QuickBrowse.",
+                    MessageBox.Show(this, "У вас установлена последняя версия ДИНАМИК браузера.",
                         "Обновления", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -901,7 +901,7 @@ internal sealed class MainForm : Form
             var installerUri = FindInstallerAsset(root, latestVersion);
             var answer = MessageBox.Show(
                 this,
-                $"Доступна новая версия QuickBrowse {latestVersion}.\n\nСкачать и установить её сейчас?",
+                $"Доступна новая версия ДИНАМИК браузера {latestVersion}.\n\nСкачать и установить её сейчас?",
                 "Доступно обновление",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Information);
@@ -956,7 +956,7 @@ internal sealed class MainForm : Form
     {
         var installerPath = Path.Combine(
             Path.GetTempPath(),
-            $"QuickBrowse-Setup-{version}.exe");
+            "QuickBrowse-Setup.exe");
         _status.Text = "Скачивание обновления…";
         using (var response = await UpdateHttpClient.GetAsync(
                    installerUri,
@@ -983,7 +983,7 @@ internal sealed class MainForm : Form
             assets.ValueKind != JsonValueKind.Array)
             throw new InvalidDataException("В опубликованном релизе нет установщика.");
 
-        var expectedName = $"QuickBrowse-Setup-{version}.exe";
+        const string expectedName = "QuickBrowse-Setup.exe";
         foreach (var asset in assets.EnumerateArray())
         {
             if (asset.ValueKind != JsonValueKind.Object ||
